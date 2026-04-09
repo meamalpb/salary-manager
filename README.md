@@ -1,0 +1,199 @@
+# Salary Management Tool
+
+## Overview
+
+A minimal yet scalable salary management system designed for HR managers to manage employees and derive salary insights across countries and job titles.
+
+The system supports employee CRUD operations and provides aggregated salary insights, with a focus on performance, maintainability, and clarity of design.
+
+---
+
+## Tech Stack
+
+* **Backend:** Ruby on Rails (API mode)
+* **Database:** SQLite
+* **Frontend:** React (planned)
+* **Testing:** RSpec + FactoryBot + Faker
+* **Linting:** RuboCop
+
+---
+
+## Architecture
+
+This project follows a **monorepo structure**:
+
+```
+salary_tool/
+  backend/   # Rails API
+  frontend/  # React app (planned)
+```
+
+### Design Philosophy
+
+* Keep backend and frontend **decoupled but co-located**
+* Focus on **API-first design**
+
+---
+
+## Data Model
+
+### Employee
+
+| Field         | Type     | Description                       |
+| ------------- | -------- | --------------------------------- |
+| id            | integer  | Primary key                       |
+| first_name    | string   | Employee first name               |
+| last_name     | string   | Employee last name                |
+| job_title     | string   | Role of the employee              |
+| country       | string   | Country of employment             |
+| salary        | decimal  | Employee salary (precision: 10,2) |
+| email         | string   | Unique identifier                 |
+| mobile_number | string   | Optional contact number           |
+| created_at    | datetime | Record creation timestamp         |
+| updated_at    | datetime | Record update timestamp           |
+
+### Computed Fields
+
+* `full_name` → derived from `first_name + last_name`
+
+  * Not stored in DB to avoid redundancy
+
+---
+
+## Database Design
+
+### Choice: SQLite
+
+SQLite was chosen for:
+
+* Simplicity
+* Zero configuration
+* Ease of local setup
+
+The schema is designed to be **fully compatible with PostgreSQL**, allowing easy migration to a production-grade database.
+
+---
+
+### Indexing Strategy
+
+To support efficient queries (especially for 10,000 employees):
+
+* Index on `country`
+* Index on `job_title`
+* Composite index on `(country, job_title)`
+* Unique index on `email`
+
+These indexes optimize salary insight queries such as:
+
+* Salary distribution per country
+* Salary per job title within a country
+
+---
+
+### Data Integrity
+
+* Enforced using:
+
+  * Database-level constraints (`NOT NULL`, unique index)
+  * Model-level validations
+
+---
+
+## API Design
+
+### Principles
+
+* RESTful endpoints
+* Explicit JSON responses
+* Consistent error handling
+
+### Serialization
+
+A lightweight serializer layer is used to:
+
+* Control API output explicitly
+* Avoid over-reliance on default Rails JSON rendering
+* Keep implementation simple without external gems
+* Separate presentation logic from models and controllers
+
+---
+
+## Validation Strategy
+
+The `Employee` model enforces:
+
+* Presence of required fields
+* Salary ≥ 0
+* Unique email (case-insensitive)
+* Valid email format
+
+This ensures correctness at both application and database levels.
+
+---
+
+## Testing Strategy
+
+* Framework: RSpec
+* Factories: FactoryBot with Faker
+
+### Approach
+
+* Tests written alongside features (incremental TDD approach)
+* Focus on:
+
+  * Model validations
+  * Core business logic
+  * API behavior (planned)
+
+### Goals
+
+* Fast and deterministic tests
+* Clear and minimal test cases
+* High confidence in core functionality
+
+---
+
+## Seeding Strategy (Planned)
+
+* Generate 10,000 employees using:
+
+  * `first_names.txt`
+  * `last_names.txt`
+* Emails generated deterministically:
+
+  * `first_name.last_name_random_number@company.com`
+* Batch inserts will be used for performance
+
+---
+
+## Future Improvements
+
+* Salary insights endpoints:
+
+* Avg / Min / Max salary per country
+* Avg salary per job title within country
+* Pagination for employee listing
+* Filtering (country, job title)
+* Frontend dashboard (React)
+* Deployment setup
+* CI pipeline using GitHub Actions
+
+---
+
+## Trade-offs
+
+| Decision          | Trade-off                                  |
+| ----------------- | ------------------------------------------ |
+| SQLite            | Simplicity over production scalability     |
+| Monorepo          | Ease of development over strict separation |
+
+---
+
+## How to Run (Backend)
+
+```bash
+cd backend
+bundle install
+rails db:create db:migrate
+rails s
+```
