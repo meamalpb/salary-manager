@@ -107,6 +107,23 @@ These indexes optimize salary insight queries such as:
 * Explicit JSON responses
 * Consistent error handling
 
+### Endpoints
+
+Employee CRUD:
+
+* `GET /employees` - list employees
+* `GET /employees/:id` - fetch a single employee
+* `POST /employees` - create employee
+* `PATCH /employees/:id` - update employee
+* `DELETE /employees/:id` - delete employee
+
+Salary insights:
+
+* `GET /salary_insights/country_stats?country=India`
+  * Returns `min_salary`, `max_salary`, and `avg_salary` for a country
+* `GET /salary_insights/job_title_stats?country=India&job_title=Engineer`
+  * Returns `avg_salary` for a job title within a country
+
 ### Serialization
 
 A lightweight serializer layer is used to:
@@ -115,6 +132,19 @@ A lightweight serializer layer is used to:
 * Avoid over-reliance on default Rails JSON rendering
 * Keep implementation simple without external gems
 * Separate presentation logic from models and controllers
+
+---
+
+## Salary Insights Design
+
+Salary insights logic is isolated in a dedicated service object:
+
+* `SalaryInsightsService#country_stats(country)`
+* `SalaryInsightsService#job_title_stats(country:, job_title:)`
+
+The controller (`SalaryInsightsController`) remains thin and delegates calculations
+to the service. This keeps business rules out of controllers and improves
+testability.
 
 ---
 
@@ -143,13 +173,42 @@ This ensures correctness at both application and database levels.
 
   * Model validations
   * Core business logic
-  * API behavior (planned)
+  * API behavior (employees + salary insights)
+  * Service behavior (salary insights calculations)
+
+### Request Spec Style
+
+Request specs for salary insights use RSpec `:aggregate_failures` so related
+response assertions are reported together in one example.
 
 ### Goals
 
 * Fast and deterministic tests
 * Clear and minimal test cases
 * High confidence in core functionality
+
+---
+
+## Linting
+
+Code quality is enforced with RuboCop and Rails/RSpec cops:
+
+* `rubocop`
+* `rubocop-rails`
+* `rubocop-rspec`
+* `rubocop-factory_bot`
+
+Run linters from the backend folder:
+
+```bash
+cd backend
+bundle exec rubocop
+```
+
+Project lint rules live in:
+
+* `backend/.rubocop.yml`
+* `backend/.rubocop_todo.yml`
 
 ---
 
@@ -168,10 +227,6 @@ This ensures correctness at both application and database levels.
 
 ## Future Improvements
 
-* Salary insights endpoints:
-
-* Avg / Min / Max salary per country
-* Avg salary per job title within country
 * Pagination for employee listing
 * Filtering (country, job title)
 * Frontend dashboard (React)
