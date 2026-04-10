@@ -6,6 +6,16 @@ A minimal yet scalable salary management system designed for HR managers to mana
 
 The system supports employee CRUD operations and provides aggregated salary insights, with a focus on performance, maintainability, and clarity of design.
 
+The frontend now includes a working employee management dashboard with:
+
+* Add employee
+* View employee details in a modal
+* Update existing employees
+* Delete employees
+* Search employees by name, email, job title, or country
+* Backend health visibility and payroll summary cards
+* DaisyUI added to make frontend styling easier to understand and extend
+
 ## Local App Setup
 
 The repo now runs as two separate apps during development:
@@ -44,9 +54,10 @@ Do not keep localhost values in production. Set:
 
 * **Backend:** Ruby on Rails (API mode)
 * **Database:** SQLite
-* **Frontend:** React (planned)
+* **Frontend:** Next.js 16 + React 19
+* **Frontend Styling:** Tailwind CSS 4 + DaisyUI + app-specific custom CSS
 * **Testing:** RSpec + FactoryBot + Faker
-* **Linting:** RuboCop
+* **Linting:** RuboCop, ESLint
 
 ---
 
@@ -57,13 +68,32 @@ This project follows a **monorepo structure**:
 ```
 salary_tool/
   backend/   # Rails API
-  frontend/  # React app (planned)
+  frontend/  # Next.js employee dashboard
 ```
 
 ### Design Philosophy
 
 * Keep backend and frontend **decoupled but co-located**
 * Focus on **API-first design**
+* Keep the frontend **componentized and easy to extend**
+
+### Frontend Structure
+
+The employee dashboard is split into focused frontend components:
+
+* `DashboardHero` for summary cards and backend status
+* `EmployeeForm` for create/update flows
+* `EmployeeDirectory` for list, search, and row actions
+* `EmployeeModal` for employee detail viewing
+* `formatters.js` for currency and timestamp formatting helpers
+
+### Styling Approach
+
+The frontend styling now uses a layered approach:
+
+* `DaisyUI` was introduced to make common UI patterns easier to reason about than raw Tailwind utility composition
+* `Tailwind CSS 4` remains available underneath for utility-driven layout and integration
+* `frontend/app/globals.css` contains the project-specific visual language, tokens, and component styling overrides
 
 ---
 
@@ -146,6 +176,7 @@ Employee CRUD:
 * `GET /employees` - list employees
 * `GET /employees/:id` - fetch a single employee
 * `POST /employees` - create employee
+* `PUT /employees/:id` - update employee
 * `PATCH /employees/:id` - update employee
 * `DELETE /employees/:id` - delete employee
 
@@ -241,6 +272,35 @@ Project lint rules live in:
 
 * `backend/.rubocop.yml`
 * `backend/.rubocop_todo.yml`
+
+Frontend linting can be run from the `frontend` folder:
+
+```bash
+cd frontend
+npm run lint
+```
+
+---
+
+## Frontend Notes
+
+The frontend talks directly to the Rails API using `NEXT_PUBLIC_API_BASE_URL`.
+
+Current UI behavior includes:
+
+* Initial employee fetch on page load
+* Backend `/up` health check display
+* Search/filtering in the employee directory
+* Inline success and error feedback for create, update, and delete actions
+* Reusable formatting helpers for salary and timestamps
+* DaisyUI available in the frontend dependency stack for component-oriented styling
+
+Key frontend files:
+
+* `frontend/app/page.js` - page orchestration and data flow
+* `frontend/app/components/` - reusable dashboard UI pieces
+* `frontend/app/lib/formatters.js` - display helpers
+* `frontend/app/globals.css` - global styling and design tokens
 
 ---
 
