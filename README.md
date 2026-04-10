@@ -6,6 +6,38 @@ A minimal yet scalable salary management system designed for HR managers to mana
 
 The system supports employee CRUD operations and provides aggregated salary insights, with a focus on performance, maintainability, and clarity of design.
 
+## Local App Setup
+
+The repo now runs as two separate apps during development:
+
+* Rails API in backend on `http://localhost:3000`
+* Next.js frontend in frontend on `http://localhost:3001`
+
+This avoids the default port clash and keeps the frontend/backend boundary explicit.
+
+### Environment variables
+
+Backend example: backend/.env.example
+
+* `ALLOWED_ORIGINS` controls which frontend origins Rails accepts through CORS.
+
+Frontend example: frontend/.env.example
+
+* `NEXT_PUBLIC_API_BASE_URL` tells Next.js where the Rails API is running.
+
+### Development
+
+1. In backend, install gems and start Rails on `3000`.
+2. In frontend, run `npm run dev`. It now starts on `3001`.
+3. Open `http://localhost:3001` to confirm the frontend can reach the Rails health endpoint.
+
+### Production note
+
+Do not keep localhost values in production. Set:
+
+* `ALLOWED_ORIGINS` to the real frontend domain, such as `https://app.example.com`
+* `NEXT_PUBLIC_API_BASE_URL` to the public API URL, such as `https://api.example.com`
+
 ---
 
 ## Tech Stack
