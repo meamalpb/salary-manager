@@ -1,12 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe "SalaryInsights API", type: :request do
+  let(:user) { create(:user) }
+  let(:headers) { auth_headers_for(user) }
+
   describe "GET /salary_insights/country_stats" do
     it "returns min, max and avg salary for a country", :aggregate_failures do
       create(:employee, country: "India", salary: 1000)
       create(:employee, country: "India", salary: 3000)
 
-      get "/salary_insights/country_stats", params: { country: "India" }
+      get "/salary_insights/country_stats", params: { country: "India" }, headers: headers
 
       expect(response).to have_http_status(:ok)
 
@@ -25,7 +28,8 @@ RSpec.describe "SalaryInsights API", type: :request do
       create(:employee, country: "India", job_title: "Engineer", salary: 4000)
 
       get "/salary_insights/job_title_stats",
-          params: { country: "India", job_title: "Engineer" }
+          params: { country: "India", job_title: "Engineer" },
+          headers: headers
 
       expect(response).to have_http_status(:ok)
 
@@ -34,6 +38,13 @@ RSpec.describe "SalaryInsights API", type: :request do
       expect(json["country"]).to eq("India")
       expect(json["job_title"]).to eq("Engineer")
       expect(json["avg_salary"]).to eq(3000.0)
+    end
+
+    it "rejects unauthenticated access" do
+      get "/salary_insights/job_title_stats", params: { country: "India", job_title: "Engineer" }
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)["error"]).to be_present
     end
   end
 end

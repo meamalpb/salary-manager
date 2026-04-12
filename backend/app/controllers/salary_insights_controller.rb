@@ -1,4 +1,6 @@
 class SalaryInsightsController < ApplicationController
+  before_action :authenticate_user!
+
   def country_stats
     render json: service.country_stats(params[:country])
   end

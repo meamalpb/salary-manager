@@ -1,5 +1,8 @@
 class ApplicationController < ActionController::API
+  include ActionController::MimeResponds
+
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+  rescue_from ActionController::ParameterMissing, with: :parameter_missing
 
   private
 
@@ -7,5 +10,11 @@ class ApplicationController < ActionController::API
     render json: {
       error: "#{exception.model} not found"
     }, status: :not_found
+  end
+
+  def parameter_missing(exception)
+    render json: {
+      error: exception.message
+    }, status: :bad_request
   end
 end

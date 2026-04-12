@@ -30,6 +30,7 @@ This avoids the default port clash and keeps the frontend/backend boundary expli
 Backend example: backend/.env.example
 
 * `ALLOWED_ORIGINS` controls which frontend origins Rails accepts through CORS.
+* `DEVISE_JWT_SECRET_KEY` is used to sign JWT tokens for backend authentication.
 
 Frontend example: frontend/.env.example
 
@@ -40,6 +41,19 @@ Frontend example: frontend/.env.example
 1. In backend, install gems and start Rails on `3000`.
 2. In frontend, run `npm run dev`. It now starts on `3001`.
 3. Open `http://localhost:3001` to confirm the frontend can reach the Rails health endpoint.
+
+### Backend auth setup
+
+From the `backend` directory:
+
+```bash
+bundle install
+bundle exec rails db:prepare
+bundle exec rails db:seed
+bundle exec rails server
+```
+
+The backend now includes a demo-only user authentication flow using Devise and JWT.
 
 ### Production note
 
@@ -54,6 +68,7 @@ Do not keep localhost values in production. Set:
 
 * **Backend:** Ruby on Rails (API mode)
 * **Database:** SQLite
+* **Authentication:** Devise + devise-jwt
 * **Frontend:** Next.js 16 + React 19
 * **Frontend Styling:** Tailwind CSS 4 + DaisyUI + app-specific custom CSS
 * **Testing:** RSpec + FactoryBot + Faker
@@ -98,6 +113,19 @@ The frontend styling now uses a layered approach:
 ---
 
 ## Data Model
+
+### User
+
+| Field              | Type     | Description                              |
+| ------------------ | -------- | ---------------------------------------- |
+| id                 | integer  | Primary key                              |
+| email              | string   | Login identifier                         |
+| encrypted_password | string   | Devise-managed password hash             |
+| username           | string   | Required field, not used for login       |
+| employee_id        | integer  | Optional employee identifier             |
+| jti                | string   | JWT revocation identifier                |
+| created_at         | datetime | Record creation timestamp                |
+| updated_at         | datetime | Record update timestamp                  |
 
 ### Employee
 
@@ -163,15 +191,31 @@ These indexes optimize salary insight queries such as:
 
 ## Seed Data
 
-Employee seed data is intentionally split into a generic entrypoint and a model-specific script:
+Seed data now creates both:
+
+* one demo `User` directly in `backend/db/seeds.rb`
+* the employee dataset through the existing employee seed script
+
+Relevant files:
 
 * `backend/db/seeds.rb`
 * `backend/db/seeds/employees.rb`
 * `backend/lib/tasks/name_lists.rake`
 
-### Why the employee seed was separated
+### Seeded demo user
 
-`backend/db/seeds.rb` is now just the main entrypoint that delegates to the employee seed script. This keeps the top-level seed file general-purpose, so model-specific logic does not accumulate in a generic location. If more models need seed data later, `db/seeds.rb` can keep loading focused scripts without turning into one large file with mixed concerns.
+`backend/db/seeds.rb` creates:
+
+* Email: `demo@example.com`
+* Password: `Password@123`
+* Username: `demo_user`
+* Employee ID: `1`
+
+Login is email/password only. The username is stored but not used for authentication.
+
+### Why the employee seed is still separated
+
+`backend/db/seeds.rb` now stays small: it creates the demo user, then delegates employee generation to the employee seed script. This keeps the top-level seed file simple while still allowing focused model-specific seed logic to live separately.
 
 ### Name list generation
 
@@ -213,6 +257,11 @@ This gives us reproducible employee seed data while still keeping the generation
 
 ### Endpoints
 
+Authentication:
+
+* `POST /login` - authenticate with email and password
+* `DELETE /logout` - revoke the current JWT-backed session
+
 Employee CRUD:
 
 * `GET /employees` - list employees
@@ -228,6 +277,24 @@ Salary insights:
   * Returns `min_salary`, `max_salary`, and `avg_salary` for a country
 * `GET /salary_insights/job_title_stats?country=India&job_title=Engineer`
   * Returns `avg_salary` for a job title within a country
+
+### Authentication behavior
+
+* Employee and salary insight endpoints now require a valid JWT
+* Login is email/password only
+* The JWT is returned in the `Authorization` response header as a Bearer token
+* Requests without a valid token return `401 Unauthorized` with a JSON error response
+
+Example login payload:
+
+```json
+{
+  "user": {
+    "email": "demo@example.com",
+    "password": "Password@123"
+  }
+}
+```
 
 ### Serialization
 
