@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: salary-manager-backend
+    runtime: ruby
+    rootDir: backend
+    plan: free
+    buildCommand: bundle install
+    startCommand: ./bin/render-start
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RACK_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: DEVISE_JWT_SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
