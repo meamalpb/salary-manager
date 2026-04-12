@@ -62,6 +62,27 @@ Do not keep localhost values in production. Set:
 * `ALLOWED_ORIGINS` to the real frontend domain, such as `https://app.example.com`
 * `NEXT_PUBLIC_API_BASE_URL` to the public API URL, such as `https://api.example.com`
 
+## Live Deployment
+
+The demo is currently deployed at:
+
+* Frontend: [https://salary-manager-six.vercel.app/](https://salary-manager-six.vercel.app/)
+* Backend: [https://salary-manager-jr4u.onrender.com](https://salary-manager-jr4u.onrender.com)
+
+Production environment values:
+
+* Backend `ALLOWED_ORIGINS=https://salary-manager-six.vercel.app`
+* Frontend `NEXT_PUBLIC_API_BASE_URL=https://salary-manager-jr4u.onrender.com`
+
+### Uptime Monitoring
+
+The backend is hosted on Render, which may spin down the free service after inactivity.
+To help keep the demo warm and also confirm when the backend is unavailable, UptimeRobot is configured to ping the backend every 5 minutes.
+
+Recommended health-check URL:
+
+* [https://salary-manager-jr4u.onrender.com/up](https://salary-manager-jr4u.onrender.com/up)
+
 ---
 
 ## Tech Stack
