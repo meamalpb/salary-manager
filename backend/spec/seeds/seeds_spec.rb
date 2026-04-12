@@ -2,6 +2,16 @@ require "rails_helper"
 
 # rubocop:disable RSpec/DescribeClass
 RSpec.describe "db:seed" do
+  around do |example|
+    User.delete_all
+    Employee.delete_all
+
+    example.run
+  ensure
+    User.delete_all
+    Employee.delete_all
+  end
+
   let(:job_titles) do
     [
       "Software Engineer",
@@ -33,7 +43,6 @@ RSpec.describe "db:seed" do
   end
 
   it "creates employees with consistent seed data" do
-    Employee.delete_all
     load Rails.root.join("db/seeds.rb")
 
     employees = Employee.order(:id).to_a

@@ -45,6 +45,18 @@ RSpec.configure do |config|
   config.include RequestAuthHelper, type: :request
   config.use_transactional_fixtures = true
 
+  config.before(:suite) do
+    Faker::UniqueGenerator.clear if defined?(Faker::UniqueGenerator)
+    User.delete_all if defined?(User) && User.table_exists?
+    Employee.delete_all if defined?(Employee) && Employee.table_exists?
+  end
+
+  config.before do
+    Faker::UniqueGenerator.clear if defined?(Faker::UniqueGenerator)
+    User.delete_all if defined?(User) && User.table_exists?
+    Employee.delete_all if defined?(Employee) && Employee.table_exists?
+  end
+
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
 

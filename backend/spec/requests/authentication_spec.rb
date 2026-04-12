@@ -4,8 +4,8 @@ RSpec.describe "Authentication API", type: :request do
   let!(:user) do
     create(
       :user,
-      email: "demo@example.com",
-      username: "demo_user",
+      email: "login-spec@example.com",
+      username: "login_spec_user",
       password: "Password@123",
       password_confirmation: "Password@123",
       employee_id: "EMP-1001"
