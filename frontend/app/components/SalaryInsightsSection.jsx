@@ -1,6 +1,32 @@
 import { useEffect, useState } from "react";
 import InsightResultCard from "./InsightResultCard";
 
+const JOB_TITLES = [
+  "Software Engineer",
+  "Senior Software Engineer",
+  "Engineering Manager",
+  "QA Engineer",
+  "Product Manager",
+  "HR Manager",
+  "Data Analyst",
+  "Finance Analyst",
+  "DevOps Engineer",
+  "Support Specialist"
+];
+
+const COUNTRIES = [
+  "India",
+  "United States",
+  "Canada",
+  "Germany",
+  "United Kingdom",
+  "Australia",
+  "Singapore",
+  "Netherlands",
+  "Brazil",
+  "Japan"
+];
+
 export default function SalaryInsightsSection({
   countries,
   jobTitles,
@@ -12,26 +38,37 @@ export default function SalaryInsightsSection({
   onRunCountryInsights,
   onRunJobTitleInsights,
 }) {
-  const [draftValues, setDraftValues] = useState(formValues);
+  const [countryFormValues, setCountryFormValues] = useState({ country: '' });
+  const [jobTitleFormValues, setJobTitleFormValues] = useState({ country: '', job_title: '' });
+  const [currentLoadingOperation, setCurrentLoadingOperation] = useState(null);
 
-  useEffect(() => {
-    setDraftValues(formValues);
-  }, [formValues]);
-
-  function handleInputChange(e) {
+  function handleCountryInputChange(e) {
     const { name, value } = e.target;
-    setDraftValues((prev) => ({ ...prev, [name]: value }));
+    setCountryFormValues((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleJobTitleInputChange(e) {
+    const { name, value } = e.target;
+    setJobTitleFormValues((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleCountrySubmit(e) {
     e.preventDefault();
-    onRunCountryInsights(draftValues);
+    setCurrentLoadingOperation('country');
+    onRunCountryInsights(countryFormValues);
   }
 
   function handleJobTitleSubmit(e) {
     e.preventDefault();
-    onRunJobTitleInsights(draftValues);
+    setCurrentLoadingOperation('jobTitle');
+    onRunJobTitleInsights(jobTitleFormValues);
   }
+
+  useEffect(() => {
+    if (!isPending && currentLoadingOperation) {
+      setCurrentLoadingOperation(null);
+    }
+  }, [isPending, currentLoadingOperation]);
 
   return (
     <section className="insights-layout">
@@ -64,19 +101,22 @@ export default function SalaryInsightsSection({
 
             <label className="field">
               <span className="field-label">Country</span>
-              <input
-                list="country-options"
+              <select
                 name="country"
-                value={draftValues.country}
-                onChange={handleInputChange}
-                placeholder="India"
+                value={countryFormValues.country}
+                onChange={handleCountryInputChange}
                 autoComplete="off"
                 required
-              />
+              >
+                <option value="">Select country</option>
+                {COUNTRIES.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
             </label>
 
-            <button className="btn-primary" type="submit" disabled={isPending}>
-              {isPending ? "Loading..." : "Run country insights"}
+            <button className="btn-primary" type="submit" disabled={isPending && currentLoadingOperation === 'country'}>
+              {isPending && currentLoadingOperation === 'country' ? "Loading..." : "Run country insights"}
             </button>
           </form>
 
@@ -96,48 +136,43 @@ export default function SalaryInsightsSection({
             <div className="field-row">
               <label className="field">
                 <span className="field-label">Country</span>
-                <input
-                  list="country-options"
+                <select
                   name="country"
-                  value={draftValues.country}
-                  onChange={handleInputChange}
-                  placeholder="India"
+                  value={jobTitleFormValues.country}
+                  onChange={handleJobTitleInputChange}
                   autoComplete="off"
                   required
-                />
+                >
+                  <option value="">Select country</option>
+                  {COUNTRIES.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
               </label>
 
               <label className="field">
                 <span className="field-label">Job title</span>
-                <input
-                  list="job-title-options"
+                <select
                   name="job_title"
-                  value={draftValues.job_title}
-                  onChange={handleInputChange}
-                  placeholder="Engineer"
+                  value={jobTitleFormValues.job_title}
+                  onChange={handleJobTitleInputChange}
                   autoComplete="off"
                   required
-                />
+                >
+                  <option value="">Select job title</option>
+                  {JOB_TITLES.map(title => (
+                    <option key={title} value={title}>{title}</option>
+                  ))}
+                </select>
               </label>
             </div>
 
-            <button className="btn-primary" type="submit" disabled={isPending}>
-              {isPending ? "Loading..." : "Run role insights"}
+            <button className="btn-primary" type="submit" disabled={isPending && currentLoadingOperation === 'jobTitle'}>
+              {isPending && currentLoadingOperation === 'jobTitle' ? "Loading..." : "Run role insights"}
             </button>
           </form>
         </div>
 
-        <datalist id="country-options">
-          {countries.map((country) => (
-            <option key={country} value={country} />
-          ))}
-        </datalist>
-
-        <datalist id="job-title-options">
-          {jobTitles.map((jobTitle) => (
-            <option key={jobTitle} value={jobTitle} />
-          ))}
-        </datalist>
       </div>
 
       <div className="insights-results">

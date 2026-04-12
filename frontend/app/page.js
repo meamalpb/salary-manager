@@ -301,11 +301,6 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      {feedback && (
-        <div className={`alert-bar ${feedback.type}`}>
-          {feedback.message}
-        </div>
-      )}
 
       <SalaryInsightsSection
         countries={countries}
@@ -319,6 +314,11 @@ export default function Home() {
         onRunJobTitleInsights={handleJobTitleInsightsSubmit}
       />
 
+      {feedback && (
+        <div className={`alert-bar ${feedback.type}`}>
+          {feedback.message}
+        </div>
+      )}
       {errors.length > 0 && (
         <div className="alert-bar error">
           <strong>Please fix the following:</strong>

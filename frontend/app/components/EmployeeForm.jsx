@@ -1,5 +1,31 @@
 import { useEffect, useState } from "react";
 
+const JOB_TITLES = [
+  "Software Engineer",
+  "Senior Software Engineer",
+  "Engineering Manager",
+  "QA Engineer",
+  "Product Manager",
+  "HR Manager",
+  "Data Analyst",
+  "Finance Analyst",
+  "DevOps Engineer",
+  "Support Specialist"
+];
+
+const COUNTRIES = [
+  "India",
+  "United States",
+  "Canada",
+  "Germany",
+  "United Kingdom",
+  "Australia",
+  "Singapore",
+  "Netherlands",
+  "Brazil",
+  "Japan"
+];
+
 export default function EmployeeForm({
   editingEmployeeId,
   formValues,
@@ -93,24 +119,32 @@ export default function EmployeeForm({
 
         <div className="field-row">
           <Field label="Job title">
-            <input
+            <select
               name="job_title"
               value={draftValues.job_title}
               onChange={handleInputChange}
-              placeholder="Software Engineer"
               autoComplete="off"
               required
-            />
+            >
+              <option value="">Select job title</option>
+              {JOB_TITLES.map(title => (
+                <option key={title} value={title}>{title}</option>
+              ))}
+            </select>
           </Field>
           <Field label="Country">
-            <input
+            <select
               name="country"
               value={draftValues.country}
               onChange={handleInputChange}
-              placeholder="India"
               autoComplete="off"
               required
-            />
+            >
+              <option value="">Select country</option>
+              {COUNTRIES.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
           </Field>
         </div>
 
