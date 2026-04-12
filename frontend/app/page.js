@@ -15,6 +15,7 @@ const emptyForm = {
   first_name: "", last_name: "", email: "",
   mobile_number: "", job_title: "", country: "", salary: "",
 };
+const emptySummary = { total_employees: 0, monthly_payroll: 0 };
 
 async function parseResponse(res) {
   if (res.status === 204) return null;
@@ -27,6 +28,7 @@ export default function Home() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
+  const [summary, setSummary] = useState(emptySummary);
   const [backendStatus, setBackendStatus] = useState({ ok: false, status: "checking" });
   const [feedback, setFeedback] = useState(null);
   const [errors, setErrors] = useState([]);
@@ -63,7 +65,7 @@ export default function Home() {
 
   const bootstrapDashboard = useEffectEvent(async (token) => {
     setIsLoading(true);
-    await Promise.all([checkBackendStatus(), loadEmployees(token)]);
+    await Promise.all([checkBackendStatus(), loadEmployees(token), loadSummary(token)]);
     setIsLoading(false);
   });
 
@@ -81,6 +83,7 @@ export default function Home() {
     setSelectedEmployee(null);
     setEditingEmployeeId(null);
     setFormValues(emptyForm);
+    setSummary(emptySummary);
     setFeedback(null);
     setErrors([]);
     setSearchTerm("");
@@ -119,11 +122,6 @@ export default function Home() {
     );
   }, [employees, searchTerm]);
 
-  const totalPayroll = useMemo(
-    () => employees.reduce((sum, e) => sum + Number(e.salary ?? 0), 0),
-    [employees]
-  );
-
   const countries = useMemo(
     () => [...new Set(employees.map((employee) => employee.country).filter(Boolean))].sort(),
     [employees]
@@ -151,6 +149,23 @@ export default function Home() {
       setEmployees(Array.isArray(data) ? data : []);
     } catch (err) {
       setFeedback({ type: "error", message: err.message ?? "Unable to load employees." });
+    }
+  }
+
+  async function loadSummary(tokenOverride = authToken) {
+    try {
+      const res = await authenticatedFetch("/employees/summary", {}, tokenOverride);
+      const data = await parseResponse(res);
+      if (!res.ok) throw new Error("Unable to load employee summary.");
+      setSummary({
+        total_employees: Number(data?.total_employees ?? 0),
+        monthly_payroll: Number(data?.monthly_payroll ?? 0),
+      });
+    } catch (err) {
+      setFeedback((prev) => prev ?? {
+        type: "error",
+        message: err.message ?? "Unable to load employee summary.",
+      });
     }
   }
 
@@ -195,7 +210,7 @@ export default function Home() {
         if (!res.ok) { setErrors(data?.errors ?? ["Unable to save employee."]); return; }
         setFeedback({ type: "success", message: editingEmployeeId ? "Employee updated." : "Employee added." });
         resetForm();
-        await Promise.all([loadEmployees(), checkBackendStatus()]);
+        await Promise.all([loadEmployees(), loadSummary(), checkBackendStatus()]);
       } catch (err) {
         setErrors([err.message ?? "Unable to save employee."]);
       }
@@ -214,7 +229,7 @@ export default function Home() {
         if (selectedEmployee?.id === employee.id) setSelectedEmployee(null);
         if (editingEmployeeId === employee.id) resetForm();
         setFeedback({ type: "success", message: "Employee deleted." });
-        await Promise.all([loadEmployees(), checkBackendStatus()]);
+        await Promise.all([loadEmployees(), loadSummary(), checkBackendStatus()]);
       } catch (err) {
         setFeedback({ type: "error", message: err.message ?? "Unable to delete employee." });
       }
@@ -293,8 +308,8 @@ export default function Home() {
   return (
     <main className="app-shell">
       <DashboardHero
-        employeeCount={employees.length}
-        totalPayroll={totalPayroll}
+        employeeCount={summary.total_employees}
+        totalPayroll={summary.monthly_payroll}
         backendStatus={backendStatus}
         currentUser={currentUser}
         isLoggingOut={isAuthSubmitting}

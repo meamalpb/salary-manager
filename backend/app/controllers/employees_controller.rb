@@ -7,6 +7,13 @@ class EmployeesController < ApplicationController
     render json: EmployeeSerializer.serialize_collection(employees), status: :ok
   end
 
+  def summary
+    render json: {
+      total_employees: Employee.count,
+      monthly_payroll: Employee.sum(:salary).to_f
+    }, status: :ok
+  end
+
   def show
     render json: EmployeeSerializer.new(@employee).as_json, status: :ok
   end

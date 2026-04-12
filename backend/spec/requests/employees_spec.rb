@@ -19,6 +19,25 @@ RSpec.describe "Employees API", type: :request do
     end
   end
 
+  describe "GET /employees/summary" do
+    it "returns aggregated employee totals" do
+      get "/employees/summary", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json).to include(
+        "total_employees" => 3,
+        "monthly_payroll" => Employee.sum(:salary).to_f
+      )
+    end
+
+    it "rejects unauthenticated access" do
+      get "/employees/summary"
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(json["error"]).to be_present
+    end
+  end
+
   describe "GET /employees/:id" do
     it "returns the employee" do
       get "/employees/#{employee_id}", headers: headers

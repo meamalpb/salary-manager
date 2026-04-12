@@ -19,7 +19,11 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
-  resources :employees, only: %i[index show create update destroy]
+  resources :employees, only: %i[index show create update destroy] do
+    collection do
+      get :summary
+    end
+  end
   namespace :salary_insights, module: nil do
     get :country_stats, to: "salary_insights#country_stats"
     get :job_title_stats, to: "salary_insights#job_title_stats"
