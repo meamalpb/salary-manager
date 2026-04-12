@@ -5,6 +5,7 @@ import DashboardHero from "./components/DashboardHero";
 import EmployeeForm from "./components/EmployeeForm";
 import EmployeeDirectory from "./components/EmployeeDirectory";
 import EmployeeModal from "./components/EmployeeModal";
+import SalaryInsightsSection from "./components/SalaryInsightsSection";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:3000";
 
@@ -30,6 +31,11 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [insightValues, setInsightValues] = useState({ country: "", job_title: "" });
+  const [countryStats, setCountryStats] = useState(null);
+  const [jobTitleStats, setJobTitleStats] = useState(null);
+  const [insightsError, setInsightsError] = useState(null);
+  const [isInsightsPending, startInsightsTransition] = useTransition();
 
   useEffect(() => {
     (async () => {
@@ -51,6 +57,16 @@ export default function Home() {
 
   const totalPayroll = useMemo(
     () => employees.reduce((sum, e) => sum + Number(e.salary ?? 0), 0),
+    [employees]
+  );
+
+  const countries = useMemo(
+    () => [...new Set(employees.map((employee) => employee.country).filter(Boolean))].sort(),
+    [employees]
+  );
+
+  const jobTitles = useMemo(
+    () => [...new Set(employees.map((employee) => employee.job_title).filter(Boolean))].sort(),
     [employees]
   );
 
@@ -100,6 +116,11 @@ export default function Home() {
     setFormValues((prev) => ({ ...prev, [name]: value }));
   }
 
+  function handleInsightsInputChange(e) {
+    const { name, value } = e.target;
+    setInsightValues((prev) => ({ ...prev, [name]: value }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setErrors([]);
@@ -147,6 +168,53 @@ export default function Home() {
     });
   }
 
+  async function handleCountryInsightsSubmit(e) {
+    e.preventDefault();
+    setInsightsError(null);
+
+    startInsightsTransition(async () => {
+      try {
+        const params = new URLSearchParams({ country: insightValues.country.trim() });
+        const res = await fetch(`${apiBaseUrl}/salary_insights/country_stats?${params}`);
+        const data = await parseResponse(res);
+
+        if (!res.ok) {
+          throw new Error("Unable to load country salary insights.");
+        }
+        console.log(`country stats${data}`)
+        setCountryStats(data);
+      } catch (err) {
+        setCountryStats(null);
+        setInsightsError(err.message ?? "Unable to load country salary insights.");
+      }
+    });
+  }
+
+  async function handleJobTitleInsightsSubmit(e) {
+    e.preventDefault();
+    setInsightsError(null);
+
+    startInsightsTransition(async () => {
+      try {
+        const params = new URLSearchParams({
+          country: insightValues.country.trim(),
+          job_title: insightValues.job_title.trim(),
+        });
+        const res = await fetch(`${apiBaseUrl}/salary_insights/job_title_stats?${params}`);
+        const data = await parseResponse(res);
+
+        if (!res.ok) {
+          throw new Error("Unable to load role salary insights.");
+        }
+
+        setJobTitleStats(data);
+      } catch (err) {
+        setJobTitleStats(null);
+        setInsightsError(err.message ?? "Unable to load role salary insights.");
+      }
+    });
+  }
+
   return (
     <main className="app-shell">
       <DashboardHero
@@ -167,7 +235,18 @@ export default function Home() {
           <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
-
+      <SalaryInsightsSection
+        countries={countries}
+        jobTitles={jobTitles}
+        formValues={insightValues}
+        isPending={isInsightsPending}
+        error={insightsError}
+        countryStats={countryStats}
+        jobTitleStats={jobTitleStats}
+        onInputChange={handleInsightsInputChange}
+        onRunCountryInsights={handleCountryInsightsSubmit}
+        onRunJobTitleInsights={handleJobTitleInsightsSubmit}
+      />
       <section className="main-grid">
         <EmployeeForm
           editingEmployeeId={editingEmployeeId}
