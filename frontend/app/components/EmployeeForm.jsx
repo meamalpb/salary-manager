@@ -1,12 +1,29 @@
+import { useEffect, useState } from "react";
+
 export default function EmployeeForm({
   editingEmployeeId,
   formValues,
   isPending,
-  onInputChange,
   onSubmit,
   onReset,
   onSwitchToAdd,
 }) {
+  const [draftValues, setDraftValues] = useState(formValues);
+
+  useEffect(() => {
+    setDraftValues(formValues);
+  }, [formValues]);
+
+  function handleInputChange(e) {
+    const { name, value } = e.target;
+    setDraftValues((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSubmit(draftValues);
+  }
+
   return (
     <div className="panel">
       <div className="panel-header">
@@ -27,23 +44,25 @@ export default function EmployeeForm({
         )}
       </div>
 
-      <form className="emp-form" onSubmit={onSubmit}>
+      <form className="emp-form" onSubmit={handleSubmit} autoComplete="off">
         <div className="field-row">
           <Field label="First name">
             <input
               name="first_name"
-              value={formValues.first_name}
-              onChange={onInputChange}
+              value={draftValues.first_name}
+              onChange={handleInputChange}
               placeholder="Aarav"
+              autoComplete="off"
               required
             />
           </Field>
           <Field label="Last name">
             <input
               name="last_name"
-              value={formValues.last_name}
-              onChange={onInputChange}
+              value={draftValues.last_name}
+              onChange={handleInputChange}
               placeholder="Sharma"
+              autoComplete="off"
               required
             />
           </Field>
@@ -54,18 +73,20 @@ export default function EmployeeForm({
             <input
               name="email"
               type="email"
-              value={formValues.email}
-              onChange={onInputChange}
+              value={draftValues.email}
+              onChange={handleInputChange}
               placeholder="aarav@example.com"
+              autoComplete="off"
               required
             />
           </Field>
           <Field label="Mobile number">
             <input
               name="mobile_number"
-              value={formValues.mobile_number}
-              onChange={onInputChange}
+              value={draftValues.mobile_number}
+              onChange={handleInputChange}
               placeholder="+91 98765 43210"
+              autoComplete="off"
             />
           </Field>
         </div>
@@ -74,18 +95,20 @@ export default function EmployeeForm({
           <Field label="Job title">
             <input
               name="job_title"
-              value={formValues.job_title}
-              onChange={onInputChange}
+              value={draftValues.job_title}
+              onChange={handleInputChange}
               placeholder="Software Engineer"
+              autoComplete="off"
               required
             />
           </Field>
           <Field label="Country">
             <input
               name="country"
-              value={formValues.country}
-              onChange={onInputChange}
+              value={draftValues.country}
+              onChange={handleInputChange}
               placeholder="India"
+              autoComplete="off"
               required
             />
           </Field>
@@ -97,9 +120,10 @@ export default function EmployeeForm({
             type="number"
             min="0"
             step="0.01"
-            value={formValues.salary}
-            onChange={onInputChange}
+            value={draftValues.salary}
+            onChange={handleInputChange}
             placeholder="50000"
+            autoComplete="off"
             required
           />
         </Field>

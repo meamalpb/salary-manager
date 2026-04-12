@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import InsightResultCard from "./InsightResultCard";
 
 export default function SalaryInsightsSection({
@@ -8,10 +9,30 @@ export default function SalaryInsightsSection({
   error,
   countryStats,
   jobTitleStats,
-  onInputChange,
   onRunCountryInsights,
   onRunJobTitleInsights,
 }) {
+  const [draftValues, setDraftValues] = useState(formValues);
+
+  useEffect(() => {
+    setDraftValues(formValues);
+  }, [formValues]);
+
+  function handleInputChange(e) {
+    const { name, value } = e.target;
+    setDraftValues((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleCountrySubmit(e) {
+    e.preventDefault();
+    onRunCountryInsights(draftValues);
+  }
+
+  function handleJobTitleSubmit(e) {
+    e.preventDefault();
+    onRunJobTitleInsights(draftValues);
+  }
+
   return (
     <section className="insights-layout">
       <div className="panel insights-panel">
@@ -28,7 +49,11 @@ export default function SalaryInsightsSection({
         {error ? <div className="alert-bar error">{error}</div> : null}
 
         <div className="insight-forms">
-          <form className="insight-form" onSubmit={onRunCountryInsights}>
+          <form
+            className="insight-form"
+            onSubmit={handleCountrySubmit}
+            autoComplete="off"
+          >
             <div className="insight-form-head">
               <h3 className="insight-form-title">Country salary range</h3>
               <p className="panel-sub">
@@ -42,9 +67,10 @@ export default function SalaryInsightsSection({
               <input
                 list="country-options"
                 name="country"
-                value={formValues.country}
-                onChange={onInputChange}
+                value={draftValues.country}
+                onChange={handleInputChange}
                 placeholder="India"
+                autoComplete="off"
                 required
               />
             </label>
@@ -54,7 +80,11 @@ export default function SalaryInsightsSection({
             </button>
           </form>
 
-          <form className="insight-form" onSubmit={onRunJobTitleInsights}>
+          <form
+            className="insight-form"
+            onSubmit={handleJobTitleSubmit}
+            autoComplete="off"
+          >
             <div className="insight-form-head">
               <h3 className="insight-form-title">Role average salary</h3>
               <p className="panel-sub">
@@ -69,9 +99,10 @@ export default function SalaryInsightsSection({
                 <input
                   list="country-options"
                   name="country"
-                  value={formValues.country}
-                  onChange={onInputChange}
+                  value={draftValues.country}
+                  onChange={handleInputChange}
                   placeholder="India"
+                  autoComplete="off"
                   required
                 />
               </label>
@@ -81,9 +112,10 @@ export default function SalaryInsightsSection({
                 <input
                   list="job-title-options"
                   name="job_title"
-                  value={formValues.job_title}
-                  onChange={onInputChange}
+                  value={draftValues.job_title}
+                  onChange={handleInputChange}
                   placeholder="Engineer"
+                  autoComplete="off"
                   required
                 />
               </label>

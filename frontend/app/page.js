@@ -175,18 +175,7 @@ export default function Home() {
     setFeedback(null);
   }
 
-  function handleInputChange(e) {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({ ...prev, [name]: value }));
-  }
-
-  function handleInsightsInputChange(e) {
-    const { name, value } = e.target;
-    setInsightValues((prev) => ({ ...prev, [name]: value }));
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(nextFormValues) {
     setErrors([]);
     setFeedback(null);
 
@@ -195,7 +184,12 @@ export default function Home() {
       try {
         const res = await authenticatedFetch(editingEmployeeId ? `/employees/${editingEmployeeId}` : "/employees", {
           method,
-          body: JSON.stringify({ employee: { ...formValues, salary: Number(formValues.salary || 0) } }),
+          body: JSON.stringify({
+            employee: {
+              ...nextFormValues,
+              salary: Number(nextFormValues.salary || 0),
+            },
+          }),
         });
         const data = await parseResponse(res);
         if (!res.ok) { setErrors(data?.errors ?? ["Unable to save employee."]); return; }
@@ -227,13 +221,13 @@ export default function Home() {
     });
   }
 
-  async function handleCountryInsightsSubmit(e) {
-    e.preventDefault();
+  async function handleCountryInsightsSubmit(nextInsightValues) {
     setInsightsError(null);
+    setInsightValues(nextInsightValues);
 
     startInsightsTransition(async () => {
       try {
-        const params = new URLSearchParams({ country: insightValues.country.trim() });
+        const params = new URLSearchParams({ country: nextInsightValues.country.trim() });
         const res = await authenticatedFetch(`/salary_insights/country_stats?${params}`);
         const data = await parseResponse(res);
 
@@ -248,15 +242,15 @@ export default function Home() {
     });
   }
 
-  async function handleJobTitleInsightsSubmit(e) {
-    e.preventDefault();
+  async function handleJobTitleInsightsSubmit(nextInsightValues) {
     setInsightsError(null);
+    setInsightValues(nextInsightValues);
 
     startInsightsTransition(async () => {
       try {
         const params = new URLSearchParams({
-          country: insightValues.country.trim(),
-          job_title: insightValues.job_title.trim(),
+          country: nextInsightValues.country.trim(),
+          job_title: nextInsightValues.job_title.trim(),
         });
         const res = await authenticatedFetch(`/salary_insights/job_title_stats?${params}`);
         const data = await parseResponse(res);
@@ -313,12 +307,6 @@ export default function Home() {
         </div>
       )}
 
-      {errors.length > 0 && (
-        <div className="alert-bar error">
-          <strong>Please fix the following:</strong>
-          <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul>
-        </div>
-      )}
       <SalaryInsightsSection
         countries={countries}
         jobTitles={jobTitles}
@@ -327,16 +315,21 @@ export default function Home() {
         error={insightsError}
         countryStats={countryStats}
         jobTitleStats={jobTitleStats}
-        onInputChange={handleInsightsInputChange}
         onRunCountryInsights={handleCountryInsightsSubmit}
         onRunJobTitleInsights={handleJobTitleInsightsSubmit}
       />
+
+      {errors.length > 0 && (
+        <div className="alert-bar error">
+          <strong>Please fix the following:</strong>
+          <ul>{errors.map((e) => <li key={e}>{e}</li>)}</ul>
+        </div>
+      )}
       <section className="main-grid">
         <EmployeeForm
           editingEmployeeId={editingEmployeeId}
           formValues={formValues}
           isPending={isPending}
-          onInputChange={handleInputChange}
           onSubmit={handleSubmit}
           onReset={resetForm}
           onSwitchToAdd={() => { resetForm(); setFeedback(null); }}

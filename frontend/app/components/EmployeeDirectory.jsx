@@ -26,7 +26,7 @@ export default function EmployeeDirectory({
         />
       </div>
 
-      <div className="table-wrap">
+      <div className="table-wrap" style={{ height: '400px', overflowY: 'auto' }}>
         <table className="emp-table">
           <thead>
             <tr>
