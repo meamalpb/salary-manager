@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useMemo, useState, useTransition } from "react";
 import DashboardHero from "./components/DashboardHero";
 import EmployeeForm from "./components/EmployeeForm";
 import EmployeeDirectory from "./components/EmployeeDirectory";
 import EmployeeModal from "./components/EmployeeModal";
+import LoginCard from "./components/LoginCard";
 import SalaryInsightsSection from "./components/SalaryInsightsSection";
+import useSessionAuth from "./lib/useSessionAuth";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:3000";
 
@@ -37,13 +39,75 @@ export default function Home() {
   const [insightsError, setInsightsError] = useState(null);
   const [isInsightsPending, startInsightsTransition] = useTransition();
 
+  const {
+    authStatus,
+    authToken,
+    currentUser,
+    credentials,
+    authError,
+    isAuthSubmitting,
+    handleCredentialsChange,
+    handleLoginSubmit,
+    handleLogout,
+    handleUnauthorized,
+  } = useSessionAuth({
+    apiBaseUrl,
+    onLoginSuccess: () => {
+      setFeedback({ type: "success", message: "Signed in successfully." });
+    },
+    onUnauthorized: resetDashboardState,
+    onLogout: () => {
+      resetDashboardState();
+    },
+  });
+
+  const bootstrapDashboard = useEffectEvent(async (token) => {
+    setIsLoading(true);
+    await Promise.all([checkBackendStatus(), loadEmployees(token)]);
+    setIsLoading(false);
+  });
+
   useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      await Promise.all([checkBackendStatus(), loadEmployees()]);
+    if (authStatus !== "authenticated" || !authToken) {
       setIsLoading(false);
-    })();
-  }, []);
+      return;
+    }
+
+    bootstrapDashboard(authToken);
+  }, [authStatus, authToken]);
+
+  function resetDashboardState() {
+    setEmployees([]);
+    setSelectedEmployee(null);
+    setEditingEmployeeId(null);
+    setFormValues(emptyForm);
+    setFeedback(null);
+    setErrors([]);
+    setSearchTerm("");
+    setInsightValues({ country: "", job_title: "" });
+    setCountryStats(null);
+    setJobTitleStats(null);
+    setInsightsError(null);
+  }
+
+  async function authenticatedFetch(path, options = {}, tokenOverride = authToken) {
+    const res = await fetch(`${apiBaseUrl}${path}`, {
+      ...options,
+      headers: {
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(tokenOverride ? { Authorization: tokenOverride } : {}),
+        ...(options.headers ?? {}),
+      },
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      handleUnauthorized();
+    }
+
+    return res;
+  }
 
   const filteredEmployees = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -79,9 +143,9 @@ export default function Home() {
     }
   }
 
-  async function loadEmployees() {
+  async function loadEmployees(tokenOverride = authToken) {
     try {
-      const res = await fetch(`${apiBaseUrl}/employees`, { cache: "no-store" });
+      const res = await authenticatedFetch("/employees", {}, tokenOverride);
       const data = await parseResponse(res);
       if (!res.ok) throw new Error("Unable to load employees.");
       setEmployees(Array.isArray(data) ? data : []);
@@ -127,15 +191,10 @@ export default function Home() {
     setFeedback(null);
 
     const method = editingEmployeeId ? "PUT" : "POST";
-    const endpoint = editingEmployeeId
-      ? `${apiBaseUrl}/employees/${editingEmployeeId}`
-      : `${apiBaseUrl}/employees`;
-
     startTransition(async () => {
       try {
-        const res = await fetch(endpoint, {
+        const res = await authenticatedFetch(editingEmployeeId ? `/employees/${editingEmployeeId}` : "/employees", {
           method,
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ employee: { ...formValues, salary: Number(formValues.salary || 0) } }),
         });
         const data = await parseResponse(res);
@@ -156,7 +215,7 @@ export default function Home() {
 
     startTransition(async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/employees/${employee.id}`, { method: "DELETE" });
+        const res = await authenticatedFetch(`/employees/${employee.id}`, { method: "DELETE" });
         if (!res.ok) throw new Error("Unable to delete employee.");
         if (selectedEmployee?.id === employee.id) setSelectedEmployee(null);
         if (editingEmployeeId === employee.id) resetForm();
@@ -175,13 +234,12 @@ export default function Home() {
     startInsightsTransition(async () => {
       try {
         const params = new URLSearchParams({ country: insightValues.country.trim() });
-        const res = await fetch(`${apiBaseUrl}/salary_insights/country_stats?${params}`);
+        const res = await authenticatedFetch(`/salary_insights/country_stats?${params}`);
         const data = await parseResponse(res);
 
         if (!res.ok) {
           throw new Error("Unable to load country salary insights.");
         }
-        console.log(`country stats${data}`)
         setCountryStats(data);
       } catch (err) {
         setCountryStats(null);
@@ -200,7 +258,7 @@ export default function Home() {
           country: insightValues.country.trim(),
           job_title: insightValues.job_title.trim(),
         });
-        const res = await fetch(`${apiBaseUrl}/salary_insights/job_title_stats?${params}`);
+        const res = await authenticatedFetch(`/salary_insights/job_title_stats?${params}`);
         const data = await parseResponse(res);
 
         if (!res.ok) {
@@ -215,12 +273,38 @@ export default function Home() {
     });
   }
 
+  if (authStatus === "checking") {
+    return (
+      <main className="auth-shell">
+        <section className="auth-card auth-card-loading">
+          <span className="spinner" />
+          <p>Checking your session...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (authStatus !== "authenticated") {
+    return (
+      <LoginCard
+        credentials={credentials}
+        authError={authError}
+        isSubmitting={isAuthSubmitting}
+        onChange={handleCredentialsChange}
+        onSubmit={handleLoginSubmit}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <DashboardHero
         employeeCount={employees.length}
         totalPayroll={totalPayroll}
         backendStatus={backendStatus}
+        currentUser={currentUser}
+        isLoggingOut={isAuthSubmitting}
+        onLogout={handleLogout}
       />
 
       {feedback && (

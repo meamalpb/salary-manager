@@ -1,6 +1,13 @@
 import { formatCurrency } from "../lib/formatters";
 
-export default function DashboardHero({ employeeCount, totalPayroll, backendStatus }) {
+export default function DashboardHero({
+  employeeCount,
+  totalPayroll,
+  backendStatus,
+  currentUser,
+  isLoggingOut,
+  onLogout,
+}) {
   return (
     <section className="hero-section">
       <div className="hero-text">
@@ -9,6 +16,16 @@ export default function DashboardHero({ employeeCount, totalPayroll, backendStat
         <p className="hero-sub">
           Add, review, update, and remove employees from one clean interface.
         </p>
+        {currentUser ? (
+          <div className="hero-auth-row">
+            <div className="hero-user-chip">
+              Signed in as {currentUser.email} 
+            </div>
+            <button className="btn-ghost" type="button" onClick={onLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? "Signing out..." : "Log out"}
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="stats-row">

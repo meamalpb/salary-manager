@@ -59,6 +59,54 @@ body {
   gap: 32px;
 }
 
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+}
+
+.auth-card {
+  width: min(100%, 460px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.auth-card-loading {
+  align-items: center;
+  text-align: center;
+}
+
+.auth-copy h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1.08;
+  margin-bottom: 10px;
+}
+
+.auth-copy p,
+.auth-hint {
+  color: var(--ink3);
+  font-size: 14px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-submit {
+  justify-content: center;
+  width: 100%;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
@@ -120,6 +168,26 @@ body {
   color: var(--ink3);
   font-size: 15px;
   max-width: 400px;
+}
+
+.hero-auth-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  align-items: center;
+}
+
+.hero-user-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(26,122,110,.08);
+  border: 1px solid rgba(26,122,110,.16);
+  color: var(--accent2);
+  font-size: 13px;
 }
 
 .stats-row {
