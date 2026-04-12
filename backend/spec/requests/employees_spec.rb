@@ -3,7 +3,13 @@ require 'rails_helper'
 RSpec.describe "Employees API", type: :request do
   let(:user) { create(:user) }
   let(:headers) { auth_headers_for(user) }
-  let!(:employees) { create_list(:employee, 3) }
+  let!(:employees) do
+    [
+      create(:employee, first_name: "John",  last_name: "Doe",   email: "john@example.com",  job_title: "Engineer", country: "USA"),
+      create(:employee, first_name: "Mark",  last_name: "Smith", email: "mark@example.com",  job_title: "Manager",  country: "UK"),
+      create(:employee, first_name: "Steve", last_name: "Brown", email: "steve@example.com", job_title: "Designer", country: "Canada")
+    ]
+  end
   let(:employee_id) { employees.first.id }
 
   def json
@@ -37,7 +43,6 @@ RSpec.describe "Employees API", type: :request do
       )
 
       get "/employees", params: { q: "ali" }, headers: headers
-
       expect(response).to have_http_status(:ok)
       expect(json.map { |employee| employee["id"] }).to eq([matching_employee.id])
     end
