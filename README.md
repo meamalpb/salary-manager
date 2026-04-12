@@ -161,6 +161,48 @@ These indexes optimize salary insight queries such as:
 
 ---
 
+## Seed Data
+
+Employee seed data is intentionally split into a generic entrypoint and a model-specific script:
+
+* `backend/db/seeds.rb`
+* `backend/db/seeds/employees.rb`
+* `backend/lib/tasks/name_lists.rake`
+
+### Why the employee seed was separated
+
+`backend/db/seeds.rb` is now just the main entrypoint that delegates to the employee seed script. This keeps the top-level seed file general-purpose, so model-specific logic does not accumulate in a generic location. If more models need seed data later, `db/seeds.rb` can keep loading focused scripts without turning into one large file with mixed concerns.
+
+### Name list generation
+
+The rake task in `backend/lib/tasks/name_lists.rake` creates:
+
+* `backend/db/seeds/first_names.txt`
+* `backend/db/seeds/last_names.txt`
+
+Run it before seeding:
+
+```bash
+cd backend
+bin/rake employees:generate_name_files
+bin/rails db:seed
+```
+
+### How the seed stays consistent
+
+The name file task only creates the text files once. If both files already exist, it skips regeneration. That means the base first-name and last-name lists stay fixed after the first successful run unless someone intentionally edits or replaces those files.
+
+Because `backend/db/seeds/employees.rb` reads from those saved text files instead of generating fresh Faker data every time:
+
+* the same first and last name pools are reused
+* the employee count stays predictable at `100 x 100 = 10,000`
+* job title and country assignment stay deterministic
+* seed output remains stable across repeated `db:seed` runs
+
+This gives us reproducible employee seed data while still keeping the generation step separate from the actual seeding step.
+
+---
+
 ## API Design
 
 ### Principles
@@ -301,19 +343,6 @@ Key frontend files:
 * `frontend/app/components/` - reusable dashboard UI pieces
 * `frontend/app/lib/formatters.js` - display helpers
 * `frontend/app/globals.css` - global styling and design tokens
-
----
-
-## Seeding Strategy (Planned)
-
-* Generate 10,000 employees using:
-
-  * `first_names.txt`
-  * `last_names.txt`
-* Emails generated deterministically:
-
-  * `first_name.last_name_random_number@company.com`
-* Batch inserts will be used for performance
 
 ---
 
