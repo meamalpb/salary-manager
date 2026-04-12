@@ -121,6 +121,19 @@ Run the relevant backend specs with:
 bundle exec rspec spec/requests/authentication_spec.rb spec/requests/employees_spec.rb spec/requests/salary_insights_spec.rb spec/seeds/seeds_spec.rb
 ```
 
+## GitHub Actions
+
+The project includes a CI workflow in [.github/workflows/ci.yml](/Users/admin/Downloads/projects/incubyte-interview-project/salary-manager/.github/workflows/ci.yml).
+
+That workflow:
+
+- installs frontend dependencies
+- runs frontend lint checks
+- installs backend gems
+- prepares the Rails test database
+- runs the backend RSpec suite
+- runs RuboCop
+
 ## Render Deployment
 
 This demo backend can be deployed to Render with SQLite on ephemeral storage.
@@ -166,6 +179,7 @@ Render may spin down the demo service after inactivity on the free tier.
 UptimeRobot can ping the health endpoint every 5 minutes to help keep the backend responsive and alert if it goes down.
 
 - Health endpoint: [https://salary-manager-jr4u.onrender.com/up](https://salary-manager-jr4u.onrender.com/up)
+- Public status page: [https://stats.uptimerobot.com/sp7z6BHeFB](https://stats.uptimerobot.com/sp7z6BHeFB)
 
 ### Seed compatibility in production
 

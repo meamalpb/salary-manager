@@ -69,6 +69,19 @@ The demo is currently deployed at:
 * Frontend: [https://salary-manager-six.vercel.app/](https://salary-manager-six.vercel.app/)
 * Backend: [https://salary-manager-jr4u.onrender.com](https://salary-manager-jr4u.onrender.com)
 
+## CI
+
+This repo includes a GitHub Actions workflow at .github/workflows/ci.yml.
+
+It currently runs:
+
+* frontend dependency installation with `npm ci`
+* frontend linting with `npm run lint`
+* backend dependency installation with Bundler
+* test database preparation with `bundle exec rails db:prepare RAILS_ENV=test`
+* backend specs with `bundle exec rspec`
+* backend linting with `bundle exec rubocop`
+
 Production environment values:
 
 * Backend `ALLOWED_ORIGINS=https://salary-manager-six.vercel.app`
@@ -82,6 +95,7 @@ To help keep the demo warm and also confirm when the backend is unavailable, Upt
 Recommended health-check URL:
 
 * [https://salary-manager-jr4u.onrender.com/up](https://salary-manager-jr4u.onrender.com/up)
+* Public status page: [https://stats.uptimerobot.com/sp7z6BHeFB](https://stats.uptimerobot.com/sp7z6BHeFB)
 
 ---
 
