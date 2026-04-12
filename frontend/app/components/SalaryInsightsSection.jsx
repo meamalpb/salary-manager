@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import InsightResultCard from "./InsightResultCard";
 
 const JOB_TITLES = [
@@ -63,12 +63,6 @@ export default function SalaryInsightsSection({
     setCurrentLoadingOperation('jobTitle');
     onRunJobTitleInsights(jobTitleFormValues);
   }
-
-  useEffect(() => {
-    if (!isPending && currentLoadingOperation) {
-      setCurrentLoadingOperation(null);
-    }
-  }, [isPending, currentLoadingOperation]);
 
   return (
     <section className="insights-layout">

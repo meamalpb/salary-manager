@@ -164,6 +164,10 @@ export default function Home() {
     }
   }
 
+  const loadDirectoryEmployeesEffect = useEffectEvent((query, token) => {
+    loadDirectoryEmployees(query, token);
+  });
+
   useEffect(() => {
     if (authStatus !== "authenticated" || !authToken) return;
 
@@ -174,7 +178,7 @@ export default function Home() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      loadDirectoryEmployees(trimmedQuery, authToken);
+      loadDirectoryEmployeesEffect(trimmedQuery, authToken);
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
