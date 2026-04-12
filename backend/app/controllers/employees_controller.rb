@@ -3,7 +3,10 @@ class EmployeesController < ApplicationController
   before_action :set_employee, only: %i[show update destroy]
 
   def index
-    employees = Employee.all
+    employees = Employee.order(:id)
+    query = params[:q].to_s.strip
+    employees = employees.search(query) if query.length >= 3
+
     render json: EmployeeSerializer.serialize_collection(employees), status: :ok
   end
 

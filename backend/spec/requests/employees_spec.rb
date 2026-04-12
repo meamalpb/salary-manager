@@ -17,6 +17,37 @@ RSpec.describe "Employees API", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json.length).to eq(3)
     end
+
+    it "filters employees when the query has at least three characters" do
+      matching_employee = create(
+        :employee,
+        first_name: "Alicia",
+        last_name: "Stone",
+        email: "alicia@example.com",
+        job_title: "Backend Engineer",
+        country: "India"
+      )
+      create(
+        :employee,
+        first_name: "Brian",
+        last_name: "Cole",
+        email: "brian@example.com",
+        job_title: "Designer",
+        country: "Canada"
+      )
+
+      get "/employees", params: { q: "ali" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json.map { |employee| employee["id"] }).to eq([matching_employee.id])
+    end
+
+    it "does not filter employees for short queries" do
+      get "/employees", params: { q: "al" }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(json.length).to eq(3)
+    end
   end
 
   describe "GET /employees/summary" do

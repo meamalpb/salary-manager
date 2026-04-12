@@ -25,6 +25,7 @@ async function parseResponse(res) {
 
 export default function Home() {
   const [employees, setEmployees] = useState([]);
+  const [directoryEmployees, setDirectoryEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
@@ -80,6 +81,7 @@ export default function Home() {
 
   function resetDashboardState() {
     setEmployees([]);
+    setDirectoryEmployees([]);
     setSelectedEmployee(null);
     setEditingEmployeeId(null);
     setFormValues(emptyForm);
@@ -112,16 +114,6 @@ export default function Home() {
     return res;
   }
 
-  const filteredEmployees = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return employees;
-    return employees.filter((e) =>
-      [e.full_name, e.email, e.job_title, e.country]
-        .filter(Boolean)
-        .some((v) => v.toLowerCase().includes(q))
-    );
-  }, [employees, searchTerm]);
-
   const countries = useMemo(
     () => [...new Set(employees.map((employee) => employee.country).filter(Boolean))].sort(),
     [employees]
@@ -151,6 +143,42 @@ export default function Home() {
       setFeedback({ type: "error", message: err.message ?? "Unable to load employees." });
     }
   }
+
+  async function loadDirectoryEmployees(query = "", tokenOverride = authToken) {
+    try {
+      const trimmedQuery = query.trim();
+      const params = new URLSearchParams();
+
+      if (trimmedQuery.length >= 3) {
+        params.set("q", trimmedQuery);
+      }
+
+      const path = params.size > 0 ? `/employees?${params.toString()}` : "/employees";
+      const res = await authenticatedFetch(path, {}, tokenOverride);
+      const data = await parseResponse(res);
+
+      if (!res.ok) throw new Error("Unable to load employees.");
+      setDirectoryEmployees(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setFeedback({ type: "error", message: err.message ?? "Unable to load employees." });
+    }
+  }
+
+  useEffect(() => {
+    if (authStatus !== "authenticated" || !authToken) return;
+
+    const trimmedQuery = searchTerm.trim();
+    if (trimmedQuery.length > 0 && trimmedQuery.length < 3) {
+      setDirectoryEmployees(employees);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      loadDirectoryEmployees(trimmedQuery, authToken);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [authStatus, authToken, employees, searchTerm]);
 
   async function loadSummary(tokenOverride = authToken) {
     try {
@@ -210,7 +238,7 @@ export default function Home() {
         if (!res.ok) { setErrors(data?.errors ?? ["Unable to save employee."]); return; }
         setFeedback({ type: "success", message: editingEmployeeId ? "Employee updated." : "Employee added." });
         resetForm();
-        await Promise.all([loadEmployees(), loadSummary(), checkBackendStatus()]);
+        await Promise.all([loadEmployees(), loadDirectoryEmployees(searchTerm), loadSummary(), checkBackendStatus()]);
       } catch (err) {
         setErrors([err.message ?? "Unable to save employee."]);
       }
@@ -229,7 +257,7 @@ export default function Home() {
         if (selectedEmployee?.id === employee.id) setSelectedEmployee(null);
         if (editingEmployeeId === employee.id) resetForm();
         setFeedback({ type: "success", message: "Employee deleted." });
-        await Promise.all([loadEmployees(), loadSummary(), checkBackendStatus()]);
+        await Promise.all([loadEmployees(), loadDirectoryEmployees(searchTerm), loadSummary(), checkBackendStatus()]);
       } catch (err) {
         setFeedback({ type: "error", message: err.message ?? "Unable to delete employee." });
       }
@@ -350,7 +378,7 @@ export default function Home() {
           onSwitchToAdd={() => { resetForm(); setFeedback(null); }}
         />
         <EmployeeDirectory
-          employees={filteredEmployees}
+          employees={directoryEmployees}
           isLoading={isLoading}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}

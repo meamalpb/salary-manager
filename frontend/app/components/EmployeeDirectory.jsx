@@ -25,6 +25,9 @@ export default function EmployeeDirectory({
           placeholder="Search name, role, country…"
         />
       </div>
+      {searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
+        <p className="panel-sub">Type at least 3 characters to search.</p>
+      )}
 
       <div className="table-wrap" style={{ height: '400px', overflowY: 'auto' }}>
         <table className="emp-table">
