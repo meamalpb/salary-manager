@@ -305,6 +305,7 @@ Employee CRUD:
 * `PUT /employees/:id` - update employee
 * `PATCH /employees/:id` - update employee
 * `DELETE /employees/:id` - delete employee
+* `GET /employees/summary` - fetch employee summary statistics (total count and monthly payroll)
 
 Salary insights:
 
@@ -451,10 +452,7 @@ Key frontend files:
 ## Future Improvements
 
 * Pagination for employee listing
-* Filtering (country, job title)
-* Frontend dashboard (React)
-* Deployment setup
-* CI pipeline using GitHub Actions
+* Optimize employee searching in frontend
 
 ---
 

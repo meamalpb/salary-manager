@@ -81,6 +81,16 @@ Example response body:
 }
 ```
 
+### Logout Response
+
+Successful logout response:
+
+```json
+{
+  "message": "Logged out successfully."
+}
+```
+
 Use that token on protected requests:
 
 ```http
@@ -94,7 +104,7 @@ Authorization: Bearer <jwt-token>
 - Email: `demo@example.com`
 - Password: `Password@123`
 - Username: `demo_user`
-- Employee ID: `EMP-DEMO-001`
+- Employee ID: `1`
 
 It also loads the employee seed data.
 
@@ -103,6 +113,7 @@ It also loads the employee seed data.
 These endpoints require a valid JWT:
 
 - `GET /employees`
+- `GET /employees/summary`
 - `GET /employees/:id`
 - `POST /employees`
 - `PUT /employees/:id`
@@ -112,6 +123,39 @@ These endpoints require a valid JWT:
 - `GET /salary_insights/job_title_stats`
 
 If authentication is missing or invalid, the API returns `401 Unauthorized` with a JSON error response.
+
+### Employee Search
+
+- `GET /employees` accepts an optional `q` query parameter
+- filtering is applied only when `q` has at least 3 characters
+- the search matches first name, last name, full name, email, job title, and country
+
+### Employees Summary Response
+
+`GET /employees/summary` returns:
+
+```json
+{
+  "total_employees": 10000,
+  "monthly_payroll": 1070000000.0
+}
+```
+
+The exact values depend on the current dataset.
+
+### Common Error Responses
+
+- missing required nested params return `400 Bad Request`
+- missing records return `404 Not Found`
+- validation failures return `422 Unprocessable Content`
+
+## Health Check
+
+The backend exposes a public health endpoint:
+
+- `GET /up`
+
+It returns `200 OK` when the app is booted successfully and is intended for uptime monitoring and platform health checks.
 
 ## Tests
 
