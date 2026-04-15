@@ -25,7 +25,10 @@ async function parseResponse(res) {
 
 export default function Home() {
   const [employees, setEmployees] = useState([]);
+  const [employeesMeta, setEmployeesMeta] = useState({ page: 1, per_page: 100, total_pages: 1, total_count: 0 });
   const [directoryEmployees, setDirectoryEmployees] = useState([]);
+  const [directoryMeta, setDirectoryMeta] = useState({ page: 1, per_page: 100, total_pages: 1, total_count: 0 });
+  const [directoryPage, setDirectoryPage] = useState(1);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [editingEmployeeId, setEditingEmployeeId] = useState(null);
   const [formValues, setFormValues] = useState(emptyForm);
@@ -81,7 +84,10 @@ export default function Home() {
 
   function resetDashboardState() {
     setEmployees([]);
+    setEmployeesMeta({ page: 1, per_page: 100, total_pages: 1, total_count: 0 });
     setDirectoryEmployees([]);
+    setDirectoryMeta({ page: 1, per_page: 100, total_pages: 1, total_count: 0 });
+    setDirectoryPage(1);
     setSelectedEmployee(null);
     setEditingEmployeeId(null);
     setFormValues(emptyForm);
@@ -135,16 +141,20 @@ export default function Home() {
 
   async function loadEmployees(tokenOverride = authToken) {
     try {
-      const res = await authenticatedFetch("/employees", {}, tokenOverride);
+      const params = new URLSearchParams({ page: "1" });
+      const res = await authenticatedFetch(`/employees?${params.toString()}`, {}, tokenOverride);
       const data = await parseResponse(res);
       if (!res.ok) throw new Error("Unable to load employees.");
-      setEmployees(Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      setEmployees(rows);
+      setEmployeesMeta(data?.meta ?? { page: 1, per_page: 100, total_pages: 1, total_count: rows.length });
+      setDirectoryPage(1);
     } catch (err) {
       setFeedback({ type: "error", message: err.message ?? "Unable to load employees." });
     }
   }
 
-  async function loadDirectoryEmployees(query = "", tokenOverride = authToken) {
+  async function loadDirectoryEmployees(query = "", page = 1, tokenOverride = authToken) {
     try {
       const trimmedQuery = query.trim();
       const params = new URLSearchParams();
@@ -152,21 +162,28 @@ export default function Home() {
       if (trimmedQuery.length >= 3) {
         params.set("q", trimmedQuery);
       }
+      params.set("page", String(page));
 
       const path = params.size > 0 ? `/employees?${params.toString()}` : "/employees";
       const res = await authenticatedFetch(path, {}, tokenOverride);
       const data = await parseResponse(res);
 
       if (!res.ok) throw new Error("Unable to load employees.");
-      setDirectoryEmployees(Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      setDirectoryEmployees(rows);
+      setDirectoryMeta(data?.meta ?? { page, per_page: 100, total_pages: 1, total_count: rows.length });
     } catch (err) {
       setFeedback({ type: "error", message: err.message ?? "Unable to load employees." });
     }
   }
 
-  const loadDirectoryEmployeesEffect = useEffectEvent((query, token) => {
-    loadDirectoryEmployees(query, token);
+  const loadDirectoryEmployeesEffect = useEffectEvent((query, page, token) => {
+    loadDirectoryEmployees(query, page, token);
   });
+
+  useEffect(() => {
+    setDirectoryPage(1);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (authStatus !== "authenticated" || !authToken) return;
@@ -174,15 +191,16 @@ export default function Home() {
     const trimmedQuery = searchTerm.trim();
     if (trimmedQuery.length > 0 && trimmedQuery.length < 3) {
       setDirectoryEmployees(employees);
+      setDirectoryMeta(employeesMeta);
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      loadDirectoryEmployeesEffect(trimmedQuery, authToken);
+      loadDirectoryEmployeesEffect(trimmedQuery, directoryPage, authToken);
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [authStatus, authToken, employees, searchTerm]);
+  }, [authStatus, authToken, employees, employeesMeta, searchTerm, directoryPage]);
 
   async function loadSummary(tokenOverride = authToken) {
     try {
@@ -386,6 +404,11 @@ export default function Home() {
           isLoading={isLoading}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          page={directoryMeta.page}
+          perPage={directoryMeta.per_page}
+          totalPages={directoryMeta.total_pages}
+          totalCount={directoryMeta.total_count}
+          onPageChange={setDirectoryPage}
           onView={setSelectedEmployee}
           onEdit={openEditForm}
           onDelete={handleDelete}

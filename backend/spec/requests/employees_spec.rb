@@ -21,7 +21,13 @@ RSpec.describe "Employees API", type: :request do
       get "/employees", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(json.length).to eq(3)
+      expect(json["data"].length).to eq(3)
+      expect(json["meta"]).to include(
+        "page" => 1,
+        "per_page" => 100,
+        "total_pages" => 1,
+        "total_count" => 3
+      )
     end
 
     it "filters employees when the query has at least three characters" do
@@ -44,14 +50,14 @@ RSpec.describe "Employees API", type: :request do
 
       get "/employees", params: { q: "ali" }, headers: headers
       expect(response).to have_http_status(:ok)
-      expect(json.map { |employee| employee["id"] }).to eq([matching_employee.id])
+      expect(json["data"].map { |employee| employee["id"] }).to eq([matching_employee.id])
     end
 
     it "does not filter employees for short queries" do
       get "/employees", params: { q: "al" }, headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(json.length).to eq(3)
+      expect(json["data"].length).to eq(3)
     end
   end
 

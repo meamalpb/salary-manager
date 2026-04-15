@@ -7,7 +7,12 @@ class EmployeesController < ApplicationController
     query = params[:q].to_s.strip
     employees = employees.search(query) if query.length >= 3
 
-    render json: EmployeeSerializer.serialize_collection(employees), status: :ok
+    paginated = employees.page(params[:page]).per(100)
+
+    render json: {
+      data: EmployeeSerializer.serialize_collection(paginated),
+      meta: pagination_meta(paginated)
+    }, status: :ok
   end
 
   def summary
@@ -45,6 +50,15 @@ class EmployeesController < ApplicationController
   end
 
   private
+
+  def pagination_meta(paginated)
+    {
+      page: paginated.current_page,
+      per_page: paginated.limit_value,
+      total_pages: paginated.total_pages,
+      total_count: paginated.total_count
+    }
+  end
 
   def set_employee
     @employee = Employee.find(params[:id])

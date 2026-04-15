@@ -5,10 +5,18 @@ export default function EmployeeDirectory({
   isLoading,
   searchTerm,
   onSearchChange,
+  page,
+  perPage,
+  totalPages,
+  totalCount,
+  onPageChange,
   onView,
   onEdit,
   onDelete,
 }) {
+  const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+  const safeTotalPages = Number.isFinite(totalPages) && totalPages > 0 ? totalPages : 1;
+
   return (
     <div className="panel">
       <div className="panel-header">
@@ -28,6 +36,35 @@ export default function EmployeeDirectory({
       {searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
         <p className="panel-sub">Type at least 3 characters to search.</p>
       )}
+
+      <div className="pagination-bar">
+        <div className="pagination-summary">
+          Showing <strong>{employees.length}</strong> of{" "}
+          <strong>{Number.isFinite(totalCount) ? totalCount : employees.length}</strong>
+          {Number.isFinite(perPage) ? ` · ${perPage}/page` : ""}
+        </div>
+        <div className="pagination-controls">
+          <button
+            type="button"
+            className="btn-ghost pagination-btn"
+            disabled={isLoading || safePage <= 1}
+            onClick={() => onPageChange?.(safePage - 1)}
+          >
+            Prev
+          </button>
+          <span className="pagination-pill" aria-live="polite">
+            Page {safePage} / {safeTotalPages}
+          </span>
+          <button
+            type="button"
+            className="btn-ghost pagination-btn"
+            disabled={isLoading || safePage >= safeTotalPages}
+            onClick={() => onPageChange?.(safePage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       <div className="table-wrap" style={{ height: '400px', overflowY: 'auto' }}>
         <table className="emp-table">
